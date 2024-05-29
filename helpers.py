@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
+import matplotlib
+import matplotlib.pyplot as plt
 import os
 
 
@@ -35,9 +37,10 @@ def report_invalid_values(df, result):
 
 def export_dataframe(df, filename_prefix):
 
-    #Exporta un DataFrame a un archivo CSV, incluyendo la fecha y hora actual en el nombre del archivo.
+    # Exporta un DataFrame a un archivo CSV,
+    # incluyendo la fecha y hora actual en el nombre del archivo.
 
-    #Parámetros:
+    # Parámetros:
     # df: DataFrame de pandas a exportar.
     # filename_prefix: Prefijo del nombre del archivo para el archivo CSV.
 
@@ -88,3 +91,22 @@ def data_analysis(df, filename_prefix='KNN_Imputed'):
         file.write(analysis_results)
     print(f'Análisis guardado en: {filename}')
 
+def plot_variances(df, filename_prefix='KNN_Imputed'):
+
+    matplotlib.use('QT5Agg')
+
+
+    for column in df.columns:
+        filtered_values = df[column].apply(
+            lambda x: x if isinstance(x, float) and
+                           len(str(x).split('.')[1]) == 2 else None).dropna()
+
+        if not filtered_values.empty:
+            plt.hist(filtered_values, bins=10)
+            plt.title(f'Histograma de la columna {column}')
+            plt.xlabel('Valor')
+            plt.ylabel('Frecuencia')
+            plt.grid(True)
+            plt.show()
+        else:
+            print(f'La columna {column} no tiene valores float con 2 decimales.')
