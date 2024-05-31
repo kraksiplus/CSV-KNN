@@ -3,7 +3,7 @@ import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-
+import matplotlib
 import os
 
 
@@ -17,8 +17,10 @@ def convert_to_float(x):
     else:
         return x
 
+
 def round_floats_to_2_decimals(np_array):
     return np.vectorize(lambda x: round(x, 2) if isinstance(x, float) else x)(np_array)
+
 
 # Función modificada para verificar si el elemento es float, int o NaN
 
@@ -63,26 +65,55 @@ def export_dataframe(df, filename_prefix):
 
 def data_analysis(df, filename_prefix='KNN_Imputed'):
     analysis_results = ""
-    for column in df.columns:
-        filtered_values = df[column].apply(
+
+    df_gonna_be_imputed_filtered = df.copy()
+    df_gonna_be_original_filtered = df.copy()
+
+    for column in df_gonna_be_imputed_filtered.columns:
+        filtered_imputed_values = df_gonna_be_imputed_filtered[column].apply(
             lambda x: x if isinstance(x, float) and
                            len(str(x).split('.')[1]) == 3 else None).dropna()
 
-        if not filtered_values.empty:
-            max_value = filtered_values.max()
-            min_value = filtered_values.min()
-            mean_value = filtered_values.mean()
-            variance_value = filtered_values.var()
+        if not filtered_imputed_values.empty:
 
-            analysis_results += f'Análisis de la columna {column}:\n'
-            analysis_results += f'Valor máximo: {max_value: .3f}\n'
-            analysis_results += f'Valor mínimo: {min_value: .3f}\n'
-            analysis_results += f'Valor promedio: {mean_value: .3f}\n'
-            analysis_results += f'Varianza: {variance_value: .3f}\n'
+            max_value_imputed = filtered_imputed_values.max()
+            min_value_imputed = filtered_imputed_values.min()
+            mean_value_imputed = filtered_imputed_values.mean()
+
+            variance_value = filtered_imputed_values.var()
+
+            analysis_results += f'Análisis de los datos imputados de la columna {column}:\n'
+            analysis_results += f'Valor máximo Imputado: {max_value_imputed: .3f}\n'
+            analysis_results += f'Valor mínimo Imputado: {min_value_imputed: .3f}\n'
+            analysis_results += f'Valor promedio Imputado: {mean_value_imputed: .3f}\n'
+            analysis_results += f'Varianza de Datos Imputados: {variance_value: .3f}\n'
             analysis_results += '-------------------------------------\n'
 
         else:
             analysis_results += f'La columna {column} no tiene valores float con 3 decimales.\n'
+
+    for column in df_gonna_be_original_filtered.columns:
+        filtered_original_values = df_gonna_be_original_filtered[column].apply(
+            lambda x: x if isinstance(x, float) and
+                           len(str(x).split('.')[1]) < 3 else None).dropna()
+
+        if not filtered_original_values.empty:
+
+            max_value_original = filtered_original_values.max()
+            min_value_original = filtered_original_values.min()
+            mean_value_original = filtered_original_values.mean()
+
+            variance_value = filtered_original_values.var()
+
+            analysis_results += f'Análisis de datos originales de la columna {column}:\n'
+            analysis_results += f'Valor máximo original: {max_value_original: .3f}\n'
+            analysis_results += f'Valor mínimo original : {min_value_original: .3f}\n'
+            analysis_results += f'Valor promedio original: {mean_value_original: .3f}\n'
+            analysis_results += f'Varianza original : {variance_value: .3f}\n'
+            analysis_results += '-------------------------------------\n'
+
+        else:
+            analysis_results += f'La columna {column} no tiene valores float con menos de 3 decimales.\n'
 
     # Obtener la fecha y hora actual
     now = datetime.now()
@@ -100,6 +131,8 @@ def data_analysis(df, filename_prefix='KNN_Imputed'):
 
 
 def plot_variances(df, filename_prefix='KNN_Imputed'):
+    # matplotlib.use('TkAgg')
+
     for column in df.columns:
         filtered_values = df[column].apply(
             lambda x: x if isinstance(x, float) and
@@ -126,3 +159,16 @@ def plot_variances(df, filename_prefix='KNN_Imputed'):
             plt.show()
         else:
             print(f'La columna {column} no tiene valores float con 3 decimales.')
+
+
+def test_algorythm_accuracy(df):
+    # We take a sample of 200 rows from the dataframe with all data is complete
+
+    df_original = df.copy()
+    mask = df_original.applymap(lambda x: isinstance(x, float) and len(str(x).split('.')[1]) < 3)
+    df_training = df_original[mask.all(axis=1)]
+
+    if len(df_training) >= 200:
+        df_training = df_training.sample(n=200)
+
+
