@@ -2,15 +2,17 @@ import pandas as pd
 import numpy as np
 from sklearn.impute import KNNImputer
 from sklearn.preprocessing import StandardScaler
-from helpers import convert_to_float, export_dataframe, data_analysis, plot_variances
+from helpers import (convert_to_float, export_dataframe, data_analysis, plot_variances, test_algorythm_accuracy,
+                     proportion_nan)
 
 df = pd.read_csv('KNN.csv', sep=';', decimal=',')
-print(df.iloc[:, :20])
+
+# print(df.iloc[:, :20])
 
 # print(len(df.columns))
 df = df.map(convert_to_float)  # convert data to float if is necessary
 
-print(df.iloc[:, :20])
+# print(df.iloc[:, :20])
 
 
 numpy_df = df.to_numpy()  # convert data to numpy array
@@ -46,5 +48,7 @@ data_analysis(df_imputed_scaled_back)
 
 # Export Imputed DataFrame to CSV
 
+test_algorythm_accuracy(df_imputed_scaled_back, nan_porcentage=proportion_nan(df, want_print=False))
 export_dataframe(df_imputed_scaled_back, 'KNN_imputed')
-plot_variances(df_imputed_scaled_back, 'KNN_imputed')
+# plot_variances(df_imputed_scaled_back, 'KNN_imputed')
+

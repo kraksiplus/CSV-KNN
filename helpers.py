@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.impute import KNNImputer
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -16,6 +19,16 @@ def convert_to_float(x):
             return x
     else:
         return x
+
+
+def proportion_nan(df, want_print: bool):
+    total_values = df.size
+    nan_values = df.isna().sum().sum()
+
+    if want_print:
+        print(nan_values / total_values)
+
+    return nan_values / total_values
 
 
 def round_floats_to_2_decimals(np_array):
@@ -161,14 +174,63 @@ def plot_variances(df, filename_prefix='KNN_Imputed'):
             print(f'La columna {column} no tiene valores float con 3 decimales.')
 
 
-def test_algorythm_accuracy(df):
-    # We take a sample of 200 rows from the dataframe with all data is complete
+def test_algorythm_accuracy(df, nan_porcentage: float):
+    # We take a sample of 300 rows from the dataframe with all data is complete
 
     df_original = df.copy()
-    mask = df_original.applymap(lambda x: isinstance(x, float) and len(str(x).split('.')[1]) < 3)
+    df_original = df_original.drop(columns=['Numero Paciente'])
+
+
+    mask = df_original.map(lambda x: isinstance(x, float) and len(str(x).split('.')[1]) < 3)
     df_training = df_original[mask.all(axis=1)]
 
-    if len(df_training) >= 200:
-        df_training = df_training.sample(n=200)
+    if len(df_training) >= 300:
+        df_training = df_training.sample(n=300)
 
+    df_test = df_training.copy()
+
+    total_values = df_test.size
+    nan_count = int(total_values * nan_porcentage)
+
+    random_indexes = np.random.randint(0, total_values, nan_count)
+
+    for index in np.nditer(random_indexes):
+        row = index // df_test.shape[1]
+        column = index % df_test.shape[1]
+        df_test.iloc[row, column] = np.nan
+
+    k_value = int(np.sqrt(len(round(df_test))))
+
+    imputer = KNNImputer(n_neighbors=k_value, weights='distance')
+
+    numpy_df = df_test.to_numpy()  # convert data to numpy array
+    scaler = StandardScaler()
+
+    numpy_df_scaled = scaler.fit_transform(numpy_df)  # scale data to mean 0 and variance 1
+    vector_standarized_imputed = imputer.fit_transform(numpy_df_scaled)  # impute data
+    df_imputed = pd.DataFrame(vector_standarized_imputed, columns=df_test.columns)  # convert numpy array to DataFrame
+
+    # Invert Standarization
+
+    numpy_df_imputed_scaled_back = scaler.inverse_transform(df_imputed)  # invert standarization
+    df_imputed_scaled_back = pd.DataFrame(numpy_df_imputed_scaled_back, columns=df_test.columns)
+    df_imputed_scaled_back = df_imputed_scaled_back.map(lambda x: round(x, 3))
+
+    # Calculate the mean absolute error between the original and imputed data
+
+    mae = mean_absolute_error(df_training, df_imputed_scaled_back)
+    mse = mean_squared_error(df_training, df_imputed_scaled_back)
+    r2 = r2_score(df_training, df_imputed_scaled_back)
+
+    print(f'MAE: {mae} MSE: {mse} R2: {r2}')
+
+    # Express accuracy in number between 0 and 1
+
+    mae_accuracy = 1 - (mae / df_training.mean().mean())
+    print(f'Accuracy based on MAE: {mae_accuracy}')
+
+    # Export original training df and imputed df to CSV
+
+    export_dataframe(df_training, 'accuracy_test/Original_Training')
+    export_dataframe(df_imputed_scaled_back, 'accuracy_test/Imputed_Training')
 
