@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import (mean_absolute_error, mean_squared_error, r2_score)
 from sklearn.impute import KNNImputer
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -76,6 +76,24 @@ def export_dataframe(df, filename_prefix):
     print(f'Archivo exportado: {filename}')
 
 
+def export_lists_to_csv(list1, list2, filename_prefix):
+    # Convert the lists to a DataFrame
+    df = pd.DataFrame({
+        'Datos Reales': list1,
+        'Datos Imputados': list2,
+    })
+
+    # Get the current date and time
+    now = datetime.now()
+    # Format the date and time for use in the file name
+    formatted_now = now.strftime('%Y-%m-%d_%H-%M-%S')
+    # Create the file name including the date and time
+    filename = f'output/{filename_prefix}_{formatted_now}.csv'
+    # Save the DataFrame to a CSV file with the generated name
+    df.to_csv(filename, sep=';', decimal=',', index=False)
+    print(f'File exported: {filename}')
+
+
 def data_analysis(df, filename_prefix='KNN_Imputed'):
     analysis_results = ""
 
@@ -144,7 +162,7 @@ def data_analysis(df, filename_prefix='KNN_Imputed'):
 
 
 def plot_variances(df, filename_prefix='KNN_Imputed'):
-    # matplotlib.use('TkAgg')
+    # matplotlib.use('TkAgg') #
 
     for column in df.columns:
         filtered_values = df[column].apply(
@@ -174,12 +192,36 @@ def plot_variances(df, filename_prefix='KNN_Imputed'):
             print(f'La columna {column} no tiene valores float con 3 decimales.')
 
 
+def extract_decimal_values(df1, df2):
+    # Initialize lists to store the extracted values
+    df1_values = []
+    df2_values = []
+
+    # Initialize a list to store the coordinates of the values with 3 decimals
+    coordinates = []
+
+    # Iterate over the first DataFrame
+    for i in range(df1.shape[0]):
+        for j in range(df1.shape[1]):
+            # Check if the value is a float with 3 decimals
+            if isinstance(df1.iloc[i, j], float) and len(str(df1.iloc[i, j]).split('.')[1]) == 3:
+                # Save the value and its coordinates
+                df1_values.append(df1.iloc[i, j])
+                coordinates.append((i, j))
+
+    # Iterate over the coordinates
+    for coord in coordinates:
+        # Extract the corresponding value from the second DataFrame
+        df2_values.append(df2.iloc[coord])
+
+    return df1_values, df2_values
+
+
 def test_algorythm_accuracy(df, nan_porcentage: float):
     # We take a sample of 300 rows from the dataframe with all data is complete
 
     df_original = df.copy()
     df_original = df_original.drop(columns=['Numero Paciente'])
-
 
     mask = df_original.map(lambda x: isinstance(x, float) and len(str(x).split('.')[1]) < 3)
     df_training = df_original[mask.all(axis=1)]
@@ -216,21 +258,16 @@ def test_algorythm_accuracy(df, nan_porcentage: float):
     df_imputed_scaled_back = pd.DataFrame(numpy_df_imputed_scaled_back, columns=df_test.columns)
     df_imputed_scaled_back = df_imputed_scaled_back.map(lambda x: round(x, 3))
 
-    # Calculate the mean absolute error between the original and imputed data
+    imputed_data, true_data = extract_decimal_values(df_imputed_scaled_back, df_training)
 
-    mae = mean_absolute_error(df_training, df_imputed_scaled_back)
-    mse = mean_squared_error(df_training, df_imputed_scaled_back)
-    r2 = r2_score(df_training, df_imputed_scaled_back)
+    print(f'Data Range: {max(true_data) - min(true_data)}')
+
+    mae = mean_absolute_error(true_data, imputed_data)
+    mse = mean_squared_error(true_data, imputed_data)
+    r2 = r2_score(true_data, imputed_data)
 
     print(f'MAE: {mae} MSE: {mse} R2: {r2}')
 
-    # Express accuracy in number between 0 and 1
-
-    mae_accuracy = 1 - (mae / df_training.mean().mean())
-    print(f'Accuracy based on MAE: {mae_accuracy}')
-
-    # Export original training df and imputed df to CSV
-
+    export_lists_to_csv(true_data, imputed_data, 'test/Imputed_vs_Original')
     export_dataframe(df_training, 'accuracy_test/Original_Training')
     export_dataframe(df_imputed_scaled_back, 'accuracy_test/Imputed_Training')
-

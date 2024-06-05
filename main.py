@@ -35,12 +35,13 @@ vector_standarized_imputed = imputer.fit_transform(numpy_df_scaled)
 
 df_imputed = pd.DataFrame(vector_standarized_imputed, columns=df.columns)
 
-print(df_imputed.iloc[:, :3].head(4))
+# print(df_imputed.iloc[:, :3].head(4))
 
 # Invert Standarization
 numpy_df_imputed_scaled_back = scaler.inverse_transform(df_imputed)
 df_imputed_scaled_back = pd.DataFrame(numpy_df_imputed_scaled_back, columns=df.columns)
 df_imputed_scaled_back = df_imputed_scaled_back.map(lambda x: round(x, 3))
+
 data_analysis(df_imputed_scaled_back)
 
 # How first rows looks like
@@ -51,4 +52,13 @@ data_analysis(df_imputed_scaled_back)
 test_algorythm_accuracy(df_imputed_scaled_back, nan_porcentage=proportion_nan(df, want_print=False))
 export_dataframe(df_imputed_scaled_back, 'KNN_imputed')
 # plot_variances(df_imputed_scaled_back, 'KNN_imputed')
+
+
+
+
+
+
+
+
+
 
