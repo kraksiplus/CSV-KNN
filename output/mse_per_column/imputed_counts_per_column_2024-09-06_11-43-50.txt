@@ -1,0 +1,29 @@
+DAU - P.A. Sistólica: 36
+DAU - P.A. Diastólica: 40
+DAU - Ciclo Vital: 44
+Glucosa Ingreso: 34
+Hb A/C % Ingreso: 48
+Colesterol Total Ing: 34
+Triglicéridos Ingreso: 30
+LDL Ingreso: 32
+HDL Ingreso: 40
+HCTO Ingreso: 27
+HB Ingreso: 31
+VCM Ingreso: 44
+HCM Ingreso: 47
+Plaquetas Ingreso: 27
+INR Ingreso: 42
+Conteo G.B Ingreso: 31
+P.C.R Ingreso: 38
+Nitrógeno Ureico Ingreso: 36
+Uremia Ingreso: 37
+Creatinina Ingreso: 39
+TTPA Ingreso: 41
+TP Ingreso: 37
+NA Ingreso: 26
+K Ingreso: 34
+CL Ingreso: 34
+Fosfatasa Alcalina Ing: 24
+Gamma Glutamil Ing: 42
+Transaminasa Piruvica Ing: 32
+Trans Oxal Ing: 33
