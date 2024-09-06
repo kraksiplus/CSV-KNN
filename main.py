@@ -30,13 +30,3 @@ test_algorythm_accuracy(df_imputed_scaled_back, nan_porcentage=proportion_nan(df
 data_analysis(df_imputed_scaled_back)
 export_dataframe(df_imputed_scaled_back, 'KNN_imputed') # explore imputed data to CSV file
 # plot_variances(df_imputed_scaled_back, 'KNN_imputed') # plot variances of imputed data
-
-
-
-
-
-
-
-
-
-

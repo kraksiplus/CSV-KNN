@@ -103,7 +103,6 @@ def data_analysis(df, filename_prefix='KNN_Imputed'):
                            len(str(x).split('.')[1]) == 3 else None).dropna()
 
         if not filtered_imputed_values.empty:
-
             max_value_imputed = filtered_imputed_values.max()
             min_value_imputed = filtered_imputed_values.min()
             mean_value_imputed = filtered_imputed_values.mean()
@@ -126,7 +125,6 @@ def data_analysis(df, filename_prefix='KNN_Imputed'):
                            len(str(x).split('.')[1]) < 3 else None).dropna()
 
         if not filtered_original_values.empty:
-
             max_value_original = filtered_original_values.max()
             min_value_original = filtered_original_values.min()
             mean_value_original = filtered_original_values.mean()
@@ -262,6 +260,19 @@ def test_algorythm_accuracy(df, nan_porcentage: float):
         'mae': mae, 'mse': mse, 'medae': medae,
         'msle': msle, 'rmsle': rmsle, 'evs': evs, 'r2': r2
     }
+
+    # Calculate MSE for each column and count imputed values
+    mse_per_column = {}
+    imputed_counts = {}
+    for column in df_training.columns:
+        mse_per_column[column] = mean_squared_error(df_training[column], df_imputed_scaled_back[column])
+        imputed_counts[column] = df_test[column].isna().sum()
+
+    # Export MSE per column
+    export_variables(mse_per_column, 'mse_per_column/mse_per_column')
+
+    # Export imputed counts per column
+    export_variables(imputed_counts, 'mse_per_column/imputed_counts_per_column')
 
     export_variables(car_dict, 'console_output/output')
 
