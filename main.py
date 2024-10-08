@@ -3,10 +3,10 @@ import numpy as np
 from sklearn.impute import KNNImputer
 from sklearn.preprocessing import StandardScaler
 from helpers import (convert_to_float, export_dataframe, data_analysis, plot_variances, test_algorythm_accuracy,
-                     proportion_nan)
+                     proportion_nan, count_three_decimals_values)
 
 
-df = pd.read_csv('KNN.csv', sep=';', decimal=',')
+df = pd.read_csv('KNN_TEST.csv', sep=';', decimal=',')
 df = df.map(convert_to_float)  # convert data to float if is necessary
 numpy_df = df.to_numpy()  # convert data to numpy array
 scaler = StandardScaler()
@@ -26,7 +26,8 @@ df_imputed_scaled_back = df_imputed_scaled_back.map(lambda x: round(x, 3))
 
 # Export Imputed DataFrame to CSV
 
-test_algorythm_accuracy(df_imputed_scaled_back, nan_porcentage=proportion_nan(df, want_print=False))
+# test_algorythm_accuracy(df_imputed_scaled_back, nan_porcentage=proportion_nan(df, want_print=False))
+test_algorythm_accuracy(df_imputed_scaled_back, nan_porcentage=count_three_decimals_values(df_imputed_scaled_back))
 data_analysis(df_imputed_scaled_back)
 export_dataframe(df_imputed_scaled_back, 'KNN_imputed') # explore imputed data to CSV file
 # plot_variances(df_imputed_scaled_back, 'KNN_imputed') # plot variances of imputed data

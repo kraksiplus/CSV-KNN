@@ -201,30 +201,62 @@ def extract_decimal_values(df1, df2):
 
     return df1_values, df2_values
 
+def count_three_decimals_values(df):
+    three_decimals_count = {}
+    percentage_three_decimals = {}
 
-def test_algorythm_accuracy(df, nan_porcentage: float):
-    # We take a sample of 300 rows from the dataframe with all data is complete
+    for column in df.columns:
+        count = df[column].apply(lambda x: isinstance(x, float) and len(str(x).split('.')[1]) >= 3).sum()
+        three_decimals_count[column] = count
+        percentage_three_decimals[column] = count / len(df[column])
 
+    print(percentage_three_decimals)
+    #print (three_decimals_count)
+    # print("number of columns: ", len(percentage_three_decimals))
+    return percentage_three_decimals
+
+
+def export_three_decimal_counts(counts, filename_prefix):
+    now = datetime.now()
+    formatted_now = now.strftime('%Y-%m-%d_%H-%M-%S')
+    filename = f'output/{filename_prefix}_{formatted_now}.txt'
+
+    with open(filename, 'w') as file:
+        for column, count in counts.items():
+            file.write(f'{column}: {count}\n')
+    print(f'Three decimal counts exported to: {filename}')
+
+
+
+def test_algorythm_accuracy(df, nan_porcentage: dict):
     df_original = df.copy()
-    df_original = df_original.drop(columns=['Numero Paciente'])
+    print("Largo DF ORIGINAL: " ,len(df_original))
+
+    try:
+        df_original = df_original.drop(columns=['Numero Paciente'])
+    except:
+        pass
 
     mask = df_original.map(lambda x: isinstance(x, float) and len(str(x).split('.')[1]) < 3)
     df_training = df_original[mask.all(axis=1)]
+
+    print("Largo DF TRAINING: " ,len(df_training))
 
     if len(df_training) >= 300:
         df_training = df_training.sample(n=300)
 
     df_test = df_training.copy()
 
-    total_values = df_test.size
-    nan_count = int(total_values * nan_porcentage)
+    for column, percentage in nan_porcentage.items():
+        total_values = len(df_test[column])
+        nan_count = int(total_values * percentage)
+        random_indexes = np.random.choice(df_test.index, nan_count, replace=False)
+        df_test.loc[random_indexes, column] = np.nan
 
-    random_indexes = np.random.randint(0, total_values, nan_count)
-
-    for index in np.nditer(random_indexes):
-        row = index // df_test.shape[1]
-        column = index % df_test.shape[1]
-        df_test.iloc[row, column] = np.nan
+        # Verificación del porcentaje de NaN introducido
+        actual_nan_count = df_test[column].isna().sum()
+        actual_percentage = actual_nan_count / total_values
+        print(f"Columna: {column}, Porcentaje esperado: {percentage}, Porcentaje real: {actual_percentage}")
 
     k_value = int(np.sqrt(len(round(df_test))))
 
@@ -238,7 +270,6 @@ def test_algorythm_accuracy(df, nan_porcentage: float):
     df_imputed = pd.DataFrame(vector_standarized_imputed, columns=df_test.columns)  # convert numpy array to DataFrame
 
     # Invert Standarization
-
     numpy_df_imputed_scaled_back = scaler.inverse_transform(df_imputed)  # invert standarization
     df_imputed_scaled_back = pd.DataFrame(numpy_df_imputed_scaled_back, columns=df_test.columns)
     df_imputed_scaled_back = df_imputed_scaled_back.map(lambda x: round(x, 3))
